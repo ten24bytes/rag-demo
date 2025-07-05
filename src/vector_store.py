@@ -83,7 +83,16 @@ class VectorStore:
         """Verify that the collection was successfully created."""
         try:
             collection_info = self.client.get_collection(self.collection_name)
-            logger.info(f"Collection verification successful: {collection_info.config.params.vectors.size} dimensions")
+            # Access vector size from the vectors config dictionary
+            vectors_config = collection_info.config.params.vectors
+            if isinstance(vectors_config, dict):
+                # If vectors is a dict, get the first vector config
+                vector_size = next(iter(vectors_config.values())).size if vectors_config else self.embedding_dimension
+            else:
+                # If vectors is a VectorParams object directly
+                vector_size = vectors_config.size if vectors_config else self.embedding_dimension
+            
+            logger.info(f"Collection verification successful: {vector_size} dimensions")
         except Exception as e:
             logger.error(f"Collection verification failed: {str(e)}")
             raise
