@@ -19,10 +19,13 @@ class VectorStore:
 
     def __init__(self):
         """Initialize the vector store client."""
+        print(f"[VectorStore] Initializing VectorStore...")
         self.client = self._init_client()
         self.collection_name = settings.qdrant_collection_name
         self.embedding_dimension = settings.embedding_dimension  # Configurable via environment
+        print(f"[VectorStore] About to ensure collection '{self.collection_name}' exists...")
         self._ensure_collection_exists()
+        print(f"[VectorStore] VectorStore initialization complete.")
 
     def _init_client(self) -> QdrantClient:
         """Initialize Qdrant client."""
@@ -47,10 +50,13 @@ class VectorStore:
     def _ensure_collection_exists(self):
         """Ensure the collection exists in Qdrant."""
         try:
+            print(f"[VectorStore] Checking if collection '{self.collection_name}' exists...")
             collections = self.client.get_collections()
             collection_names = [col.name for col in collections.collections]
+            print(f"[VectorStore] Found existing collections: {collection_names}")
 
             if self.collection_name not in collection_names:
+                print(f"[VectorStore] Creating collection: {self.collection_name}")
                 logger.info(f"Creating collection: {self.collection_name}")
                 self.client.create_collection(
                     collection_name=self.collection_name,
@@ -59,12 +65,27 @@ class VectorStore:
                         distance=Distance.COSINE
                     )
                 )
+                print(f"[VectorStore] Collection {self.collection_name} created successfully")
                 logger.info(f"Collection {self.collection_name} created successfully")
+                
+                # Verify the collection was created
+                self._verify_collection_exists()
             else:
+                print(f"[VectorStore] Collection {self.collection_name} already exists")
                 logger.info(f"Collection {self.collection_name} already exists")
 
         except Exception as e:
+            print(f"[VectorStore] Error ensuring collection exists: {str(e)}")
             logger.error(f"Error ensuring collection exists: {str(e)}")
+            raise
+
+    def _verify_collection_exists(self):
+        """Verify that the collection was successfully created."""
+        try:
+            collection_info = self.client.get_collection(self.collection_name)
+            logger.info(f"Collection verification successful: {collection_info.config.params.vectors.size} dimensions")
+        except Exception as e:
+            logger.error(f"Collection verification failed: {str(e)}")
             raise
 
     def add_documents(
@@ -87,6 +108,12 @@ class VectorStore:
         try:
             if len(texts) != len(embeddings) != len(metadata):
                 raise ValueError("Texts, embeddings, and metadata must have the same length")
+
+            print(f"[VectorStore] add_documents called with {len(texts)} documents")
+            logger.info(f"add_documents called with {len(texts)} documents")
+            
+            # Ensure collection exists before adding documents
+            self._ensure_collection_exists_for_operation()
 
             points = []
             for i, (text, embedding, meta) in enumerate(zip(texts, embeddings, metadata)):
@@ -119,6 +146,21 @@ class VectorStore:
             logger.error(f"Error adding documents to vector store: {str(e)}")
             return False
 
+    def _ensure_collection_exists_for_operation(self):
+        """Ensure collection exists before performing operations."""
+        try:
+            print(f"[VectorStore] Checking collection exists for operation...")
+            logger.info(f"Checking collection exists for operation...")
+            # Try to get collection info
+            self.client.get_collection(self.collection_name)
+            print(f"[VectorStore] Collection {self.collection_name} confirmed to exist")
+            logger.info(f"Collection {self.collection_name} confirmed to exist")
+        except Exception as e:
+            # Collection doesn't exist, create it
+            print(f"[VectorStore] Collection {self.collection_name} not found, creating it now...")
+            logger.warning(f"Collection {self.collection_name} not found, creating it now...")
+            self._ensure_collection_exists()
+
     def search_similar(
         self,
         query_embedding: List[float],
@@ -137,6 +179,9 @@ class VectorStore:
             List of tuples (text, score, metadata)
         """
         try:
+            # Ensure collection exists before searching
+            self._ensure_collection_exists_for_operation()
+            
             search_result = self.client.search(
                 collection_name=self.collection_name,
                 query_vector=query_embedding,
@@ -204,6 +249,9 @@ class VectorStore:
             Dictionary with collection information
         """
         try:
+            # Ensure collection exists
+            self._ensure_collection_exists_for_operation()
+            
             info = self.client.get_collection(self.collection_name)
             return {
                 "name": self.collection_name,
@@ -214,7 +262,14 @@ class VectorStore:
             }
         except Exception as e:
             logger.error(f"Error getting collection info: {str(e)}")
-            return {}
+            return {
+                "name": self.collection_name,
+                "vector_size": self.embedding_dimension,
+                "distance": "COSINE",
+                "points_count": 0,
+                "status": "ERROR",
+                "error": str(e)
+            }
 
     def clear_collection(self) -> bool:
         """
@@ -251,4 +306,37 @@ class VectorStore:
             return True
         except Exception as e:
             logger.error(f"Vector store health check failed: {str(e)}")
+            return False
+
+    def recreate_collection(self) -> bool:
+        """
+        Recreate the collection (deletes existing one if it exists).
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Try to delete existing collection
+            try:
+                self.client.delete_collection(self.collection_name)
+                logger.info(f"Deleted existing collection: {self.collection_name}")
+            except Exception:
+                logger.info(f"Collection {self.collection_name} did not exist")
+            
+            # Create new collection
+            self.client.create_collection(
+                collection_name=self.collection_name,
+                vectors_config=VectorParams(
+                    size=self.embedding_dimension,
+                    distance=Distance.COSINE
+                )
+            )
+            logger.info(f"Successfully recreated collection: {self.collection_name}")
+            
+            # Verify the collection was created
+            self._verify_collection_exists()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error recreating collection: {str(e)}")
             return False

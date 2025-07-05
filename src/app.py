@@ -101,6 +101,17 @@ def setup_sidebar():
     st.sidebar.text(f"LLM Model: {settings.llm_model}")
     st.sidebar.text(f"Chunk Size: {settings.chunk_size}")
 
+    # System controls
+    st.sidebar.subheader("🔧 System Controls")
+    
+    # Recreate collection button (for troubleshooting)
+    if st.session_state.rag_pipeline:
+        if st.sidebar.button("🔄 Recreate Vector Collection", 
+                            help="Recreate the vector database collection (this will clear all documents)"):
+            recreate_vector_collection()
+    
+    st.sidebar.markdown("---")
+
 
 def process_documents(uploaded_files):
     """Process uploaded documents."""
@@ -292,6 +303,32 @@ def display_system_info():
 
         for key, value in config_data.items():
             st.text(f"{key}: {value}")
+
+
+def recreate_vector_collection():
+    """Recreate the vector collection (for troubleshooting)."""
+    try:
+        if st.session_state.rag_pipeline:
+            with st.spinner("Recreating vector collection..."):
+                success = st.session_state.rag_pipeline.vector_store.recreate_collection()
+                
+                if success:
+                    # Clear processed files from session state
+                    st.session_state.processed_files = []
+                    st.success("✅ Vector collection recreated successfully!")
+                    logger.info("Vector collection recreated by user")
+                else:
+                    st.error("❌ Failed to recreate vector collection")
+                    logger.error("Failed to recreate vector collection")
+                    
+                # Rerun to refresh the UI
+                st.rerun()
+        else:
+            st.error("❌ RAG pipeline not initialized")
+            
+    except Exception as e:
+        st.error(f"❌ Error recreating collection: {str(e)}")
+        logger.error(f"Error recreating collection: {str(e)}")
 
 
 def main():

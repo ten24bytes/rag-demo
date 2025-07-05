@@ -123,7 +123,7 @@ class RAGPipeline(dspy.Module):
                 else:
                     results["failed"].append({
                         "file": file_path,
-                        "error": "Failed to add to vector store"
+                        "error": "Failed to add to vector store - check vector database connection"
                     })
 
             except Exception as e:
