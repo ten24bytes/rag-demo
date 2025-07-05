@@ -1,0 +1,130 @@
+# ====================
+# Python
+# ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+build/
+dist/
+wheels/
+
+# ====================
+# Virtual Environments
+# ====================
+venv/
+env/
+ENV/
+.venv/
+.env/
+.Python
+
+# ====================
+# Environment Variables
+# ====================
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+
+# ====================
+# Application Data
+# ====================
+# Uploaded files
+uploads/
+upload/
+media/
+
+# Logs
+*.log
+logs/
+log/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# ====================
+# Development Tools
+# ====================
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# Testing
+.pytest_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.nyc_output
+coverage.xml
+*.cover
+.hypothesis/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypi.json
+
+# Linting
+.flake8
+.pylintrc
+
+# ====================
+# OS Generated Files
+# ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ====================
+# Temporary Files
+# ====================
+*.tmp
+*.temp
+*.bak
+*.swp
+*~.nib
+local_settings.py
+
+# ====================
+# Docker
+# ====================
+.dockerignore
+docker-compose.override.yml
+
+# ====================
+# Package Managers
+# ====================
+# uv
+# uv.lock
+
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ====================
+# Security
+# ====================
+# API keys and secrets
+*.pem
+*.key
+*.crt
+.secrets/
+secrets.json
