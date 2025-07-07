@@ -63,7 +63,7 @@ Edit `.env` and add your OpenAI API key:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
-LLM_MODEL=gpt-3.5-turbo
+LLM_MODEL=gpt-4o
 EMBEDDING_MODEL=text-embedding-3-small
 EMBEDDING_DIMENSION=1536
 ```
@@ -120,7 +120,7 @@ Open your browser and navigate to: **http://localhost:8501**
 | Variable              | Default                  | Description                                |
 | --------------------- | ------------------------ | ------------------------------------------ |
 | `OPENAI_API_KEY`      | _Required_               | OpenAI API key for embeddings and LLM      |
-| `LLM_MODEL`           | `gpt-3.5-turbo`          | OpenAI model for text generation           |
+| `LLM_MODEL`           | `gpt-4o`                 | OpenAI model for text generation           |
 | `EMBEDDING_MODEL`     | `text-embedding-3-small` | OpenAI embedding model                     |
 | `EMBEDDING_DIMENSION` | `1536`                   | Embedding vector dimensions (1536/512/256) |
 | `QDRANT_URL`          | `http://localhost:6333`  | Qdrant vector database URL                 |
